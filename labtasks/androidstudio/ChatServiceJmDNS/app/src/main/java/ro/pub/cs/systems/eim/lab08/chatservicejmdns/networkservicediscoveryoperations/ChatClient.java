@@ -82,6 +82,40 @@ public class ChatClient {
 
                     // TODO: exercise 6
                     // iterate while the thread is not yet interrupted
+                    while (!Thread.currentThread().isInterrupted()) {
+                        String content = messageQueue.take();
+
+                        if (content == null || content.isEmpty()) {
+                            Log.d(Constants.TAG, "Content null or empty in send thread");
+                            continue;
+                        }
+
+                        printWriter.println(content);
+                        printWriter.flush(); //safety reason
+
+                        Message message = new Message(content, Constants.MESSAGE_TYPE_SENT);
+
+                        conversationHistory.add(message);
+
+                        if (context == null) {
+                            continue;
+                        }
+
+                        ChatActivity chatActivity = (ChatActivity)context;
+                        FragmentManager fragmentManager = chatActivity.getFragmentManager();
+                        Fragment fragment = fragmentManager.findFragmentByTag(Constants.FRAGMENT_TAG);
+
+                        if (fragment == null) {
+                            continue;
+                        }
+
+                        if (fragment instanceof ChatConversationFragment && fragment.isVisible()) {
+                            ChatConversationFragment chatConversationFragment = (ChatConversationFragment)fragment;
+                            chatConversationFragment.appendMessage(message);
+                        }
+
+                    }
+
                     // - get the content (a line) from the messageQueue, if available, using the take() method
                     // - if the content is not null
                     //   - send the content to the PrintWriter, as a line
@@ -119,6 +153,37 @@ public class ChatClient {
 
                     // TODO: exercise 7
                     // iterate while the thread is not yet interrupted
+                    while (!Thread.currentThread().isInterrupted()) {
+                        String content = bufferedReader.readLine();
+
+                        if (content == null || content.isEmpty()) {
+                            Log.d(Constants.TAG, "Content null or empty in receive thread");
+                            continue;
+                        }
+
+                        Message message = new Message(content, Constants.MESSAGE_TYPE_RECEIVED);
+
+                        conversationHistory.add(message);
+
+                        if (context == null) {
+                            continue;
+                        }
+
+                        ChatActivity chatActivity = (ChatActivity)context;
+                        FragmentManager fragmentManager = chatActivity.getFragmentManager();
+                        Fragment fragment = fragmentManager.findFragmentByTag(Constants.FRAGMENT_TAG);
+
+                        if (fragment == null) {
+                            continue;
+                        }
+
+                        if (fragment instanceof ChatConversationFragment && fragment.isVisible()) {
+                            ChatConversationFragment chatConversationFragment = (ChatConversationFragment)fragment;
+                            chatConversationFragment.appendMessage(message);
+                        }
+
+                    }
+
                     // - receive the content (a line) from the bufferedReader, if available
                     // - if the content is not null
                     //   - create a Message instance, with the content received and Constants.MESSAGE_TYPE_RECEIVED as message type
